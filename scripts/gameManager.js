@@ -6,51 +6,38 @@ const boardManager = (function() {
     const totalRounds = 3;
     let currentRound;
     let board = gameBoard;
+    let currentPlayer;
     let player1 = player("player1");
     let player2 = player("player2");
+    let roundVictory = false;
 
-    const beginGame = function() {
-        let winner;
-        isGameActive = true;
-        currentRound = 1;
-        for (let i = 0; i < totalRounds; i++) {
-            playRound();
-        }
-        if (player1.getRoundScore() > player2.getRoundScore()) {
-            winner = player1;
-        }
-        else if (player2.getRoundScore() > player1.getRoundScore()) {
-            winner = player2
-        }
-        else {
-            winner = "DRAW";
-        }
-        console.log("This game is over");
-        console.log(`Final scores: Player 1 - ${player1.getRoundScore()} | Player 2 - ${player2.getRoundScore()}`);
-        console.log(`The winner is: ${winner.getPlayerName()}`);
+    let winner;
+    isGameActive = true;
+    currentRound = 1;
+    currentPlayer = player1;
+
+    const endGame = function() {
+        isGameActive = false;
+        board.resetBoard();
+        player1.resetScore();
+        player2.resetScore();
     }
 
-    const playRound = function() {
-        let roundVictory = false;
+    const playRound = function(targetRow, targetColumn) {
         player1.setTokentype(1);
         player2.setTokentype(2);
 
-        board.printBoard();
-        let currentPlayer = player1;
-
-        while(!roundVictory && !checkBoardFull()) {
+        if (!roundVictory && !checkBoardFull()) {
             if (checkBoardFull()) {
-                console.log("The board is full!");
                 board.resetBoard();
-                board.printBoard();
             }
-            setToken(currentPlayer);
+            setToken(currentPlayer, targetRow, targetColumn);
 
             roundVictory = checkVictory();
             if (roundVictory) {
                 currentPlayer.addRoundScore();
-                console.log(`${currentPlayer.getPlayerName()} wins this round!`);
                 board.resetBoard();
+                endGame();
             }
         
             if (currentPlayer === player1) {
@@ -63,19 +50,15 @@ const boardManager = (function() {
         }
     }
 
-    const setToken = function(player) {
+    const setToken = function(player, positionRow, positionColumn) {
         let set = false;
         while (!set) {
-            let position = prompt(`${player.getPlayerName()}, strike at: `);
-            let positionRow = position.split(" ")[0];
-            let positionColumn = position.split(" ")[1];
             if (board.getBoardPosition(positionRow, positionColumn) === 0) {
                 board.addToken(player.getTokenType(), positionRow, positionColumn);
-                board.printBoard();
                 set = true;
             }
             else {
-                console.log("Position already occupied");
+                //console.log("Position already occupied");
             }
         }
     }
@@ -153,7 +136,7 @@ const boardManager = (function() {
             if (diagValue === 0) { return false; }
             else if (diagValue !== 0) {
                 if (gb[j][i] != diagValue && diagValue != 0) {
-                    return false
+                    return false;
                 }
             }
         }
@@ -171,7 +154,15 @@ const boardManager = (function() {
         return true;
     }
 
-    return {beginGame};
+    const getIsGameActive = function() {return isGameActive};
+
+    const setIsGameActive = function(value) {isGameActive = value; console.log(isGameActive)};
+
+    const getScores = function(name) {return [player1.getRoundScore(), player2.getRoundScore()]};
+
+    const getCurrentPlayer = function() {return currentPlayer.getPlayerName()};
+
+    return { endGame, playRound, getIsGameActive, setIsGameActive, getScores, getCurrentPlayer };
 })();
 
 export {boardManager};
