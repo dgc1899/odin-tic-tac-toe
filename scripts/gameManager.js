@@ -1,5 +1,6 @@
 import { player } from "./player.js";
 import { gameBoard } from "./gameBoard.js";
+import { screenController } from "./screenController.js";
 
 const boardManager = (function() {
     let isGameActive = false;
@@ -7,47 +8,80 @@ const boardManager = (function() {
     let currentRound;
     let board = gameBoard;
     let currentPlayer;
-    let player1 = player("player1");
-    let player2 = player("player2");
     let roundVictory = false;
-
     let winner;
-    isGameActive = true;
+    let player1;
+    let player2;
     currentRound = 1;
-    currentPlayer = player1;
 
-    const endGame = function() {
+    const setPlayerName = function(name_1, name_2) {
+        player1 = player(name_1);
+        player2 = player(name_2);
+
+        currentPlayer = player1;
+
+    }
+
+    const endGame = function(reset) {
+        if (!reset) {
+            console.log(`${player1.getRoundScore()} \n ${player2.getRoundScore()}`);
+            if (player1.getRoundScore() > player2.getRoundScore()) {
+                winner = player1.getPlayerName();
+            }
+            else if (player1.getRoundScore() < player2.getRoundScore()) {
+                winner = player2.getPlayerName();
+            }
+            else {
+                winner = "Draw!";
+            }
+        }
         isGameActive = false;
         board.resetBoard();
         player1.resetScore();
         player2.resetScore();
+        currentRound = 1;
+
+        if (!reset) {
+            screenController.endGame(winner);
+
+        }
     }
 
     const playRound = function(targetRow, targetColumn) {
+        isGameActive = true;
+        roundVictory = false;
         player1.setTokentype(1);
         player2.setTokentype(2);
-
-        if (!roundVictory && !checkBoardFull()) {
-            if (checkBoardFull()) {
-                board.resetBoard();
-            }
-            setToken(currentPlayer, targetRow, targetColumn);
-
-            roundVictory = checkVictory();
-            if (roundVictory) {
-                currentPlayer.addRoundScore();
-                board.resetBoard();
-                endGame();
-            }
         
-            if (currentPlayer === player1) {
-                currentPlayer = player2;
-            }
-            else {
-                currentPlayer = player1;
-            }
-            
+        if (currentRound <= totalRounds) {
+            if (!roundVictory && !checkBoardFull()) {
+                setToken(currentPlayer, targetRow, targetColumn);
+    
+                roundVictory = checkVictory();
+                if (roundVictory) {
+                    if (currentRound === 3) {
+                        currentPlayer.addRoundScore();
+                        endGame(false);
+                    }
+                    else {
+                        currentPlayer.addRoundScore();
+                        board.resetBoard();
+                        currentRound++;
+                    }
+                }
+                if (currentPlayer === player1) {
+                    currentPlayer = player2;
+                }
+                else {
+                    currentPlayer = player1;
+                }
+            } 
         }
+        else {
+            board.resetBoard();
+        }
+
+       
     }
 
     const setToken = function(player, positionRow, positionColumn) {
@@ -57,16 +91,12 @@ const boardManager = (function() {
                 board.addToken(player.getTokenType(), positionRow, positionColumn);
                 set = true;
             }
-            else {
-                //console.log("Position already occupied");
-            }
         }
     }
 
     const checkVictory = function() {
         let victory = false;
         const gb = board.getBoard();
-
         if (checkRows(gb) || checkColumns(gb) || checkDiagonal(gb) || checkInverseDiagonal(gb)) {
             return true;
         }
@@ -154,6 +184,10 @@ const boardManager = (function() {
         return true;
     }
 
+    const clearBoard = function() {
+        board.resetBoard();
+    }
+
     const getIsGameActive = function() {return isGameActive};
 
     const setIsGameActive = function(value) {isGameActive = value; console.log(isGameActive)};
@@ -162,7 +196,14 @@ const boardManager = (function() {
 
     const getCurrentPlayer = function() {return currentPlayer.getPlayerName()};
 
-    return { endGame, playRound, getIsGameActive, setIsGameActive, getScores, getCurrentPlayer };
+    const getCurrentRound = function() {return currentRound};
+
+    const getPlayerName = function() {
+        return [player1.getPlayerName(), player2.getPlayerName()];
+    }
+
+    return { endGame, playRound, getIsGameActive, setIsGameActive, getScores,
+         getCurrentPlayer, getCurrentRound, checkBoardFull, clearBoard, setPlayerName, getPlayerName };
 })();
 
 export {boardManager};

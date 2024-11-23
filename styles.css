@@ -52,8 +52,8 @@
   main {
     display: flex;
     flex-direction: column;
-    width: 50%;
-    height: 50%;
+    width: 500px;
+    height: 500px;
     justify-self: center;
     align-self: center;
   }
@@ -64,6 +64,7 @@
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-template-rows: repeat(3, 1fr);
+    font-size: 1.2rem;
 
     .game-button {
         background-color: white;
